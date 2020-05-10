@@ -1,9 +1,9 @@
-package com.howtodoinjava.rest.dao;
+package com.example.rest.dao;
 
 import org.springframework.stereotype.Repository;
 
-import com.howtodoinjava.rest.model.Employee;
-import com.howtodoinjava.rest.model.Employees;
+import com.example.rest.model.Employee;
+import com.example.rest.model.Employees;
 
 @Repository
 public class EmployeeDAO 

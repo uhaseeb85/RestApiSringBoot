@@ -1,4 +1,4 @@
-package com.howtodoinjava.rest.exception;
+package com.example.rest.exception;
 
 public class MissingHeaderException extends RuntimeException
 {

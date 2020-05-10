@@ -1,4 +1,4 @@
-package com.howtodoinjava.rest.controller;
+package com.example.rest.controller;
 
 import java.net.URI;
 
@@ -12,20 +12,32 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
-import com.howtodoinjava.rest.dao.EmployeeDAO;
-import com.howtodoinjava.rest.model.Employee;
-import com.howtodoinjava.rest.model.Employees;
+import com.example.rest.dao.EmployeeDAO;
+import com.example.rest.model.Employee;
+import com.example.rest.model.Employees;
+import com.google.common.util.concurrent.RateLimiter;
 
 @RestController
 @RequestMapping(path = "/employees")
 public class EmployeeController 
 {
+	
+	final RateLimiter rateLimiter = RateLimiter.create(0.25);
+	
     @Autowired
     private EmployeeDAO employeeDao;
     
-    @GetMapping(path="/", produces = "application/json")
-    public Employees getEmployees() 
+    @GetMapping(path="/ratelimiter", produces = "application/json")
+    public Employees getEmployeesRateLimiter() 
     {
+    	rateLimiter.acquire();
+        return employeeDao.getAllEmployees();
+    }
+    
+    @GetMapping(path="/weddini", produces = "application/json")
+    public Employees getEmployeesWeddini() 
+    {
+    	rateLimiter.acquire();
         return employeeDao.getAllEmployees();
     }
     
