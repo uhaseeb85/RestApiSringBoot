@@ -4,8 +4,6 @@
 package com.example.rest;
 
 import java.time.Duration;
-import java.util.HashMap;
-import java.util.Map;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
@@ -25,7 +23,8 @@ import io.github.bucket4j.Bucket4j;
 @Configuration
 public class ThrottlingConfiguration implements WebMvcConfigurer {
 	
-	private static final long NUMBER_OF_REQUESTS=10;
+	/** The Constant NUMBER_OF_REQUESTS. */
+	private static final long NUMBER_OF_REQUESTS_PER_MINUTE=10;
 	
 	/**
 	 * Adds the interceptors.
@@ -34,10 +33,20 @@ public class ThrottlingConfiguration implements WebMvcConfigurer {
 	 */
 	@Override
 	public void addInterceptors(InterceptorRegistry registry) {
-		Bandwidth limit = Bandwidth.simple(NUMBER_OF_REQUESTS, Duration.ofMinutes(1));
+		registry.addInterceptor(new RateLimitInterceptor(createBucket(NUMBER_OF_REQUESTS_PER_MINUTE), 1)).addPathPatterns("/employees/bucket4j");
+		registry.addInterceptor(new RateLimitInterceptor(createBucket(NUMBER_OF_REQUESTS_PER_MINUTE), 1)).addPathPatterns("/employees/bucket4j_v2");
+	}
+
+	/**
+	 * Creates the bucket.
+	 *
+	 * @param numberOfRequests the number of requests
+	 * @return the bucket
+	 */
+	private Bucket createBucket(long numberOfRequests) {
+		Bandwidth limit = Bandwidth.simple(NUMBER_OF_REQUESTS_PER_MINUTE, Duration.ofMinutes(1));
 		Bucket bucket = Bucket4j.builder().addLimit(limit).build();
-		registry.addInterceptor(new RateLimitInterceptor(bucket, 1)).addPathPatterns("/employees/bucket4j");
-		registry.addInterceptor(new RateLimitInterceptor(bucket, 1)).addPathPatterns("/employees/bucket4j_v2");
+		return bucket;
 	}
 
 }
