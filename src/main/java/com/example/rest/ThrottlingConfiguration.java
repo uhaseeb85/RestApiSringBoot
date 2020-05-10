@@ -25,12 +25,7 @@ import io.github.bucket4j.Bucket4j;
 @Configuration
 public class ThrottlingConfiguration implements WebMvcConfigurer {
 	
-	private static Map<Long,String> API_THROTTING_MAP = new HashMap<Long,String>();
-	
-	static {
-		// < Number of Requests per Minute , URL pattern >
-		API_THROTTING_MAP.put((long) 10, "/employees/bucket4j");
-	}
+	private static final long NUMBER_OF_REQUESTS=10;
 	
 	/**
 	 * Adds the interceptors.
@@ -39,12 +34,10 @@ public class ThrottlingConfiguration implements WebMvcConfigurer {
 	 */
 	@Override
 	public void addInterceptors(InterceptorRegistry registry) {
-		API_THROTTING_MAP.entrySet().stream().forEach(i -> {
-			Bandwidth limit = Bandwidth.simple(i.getKey(), Duration.ofMinutes(1));
-			Bucket bucket = Bucket4j.builder().addLimit(limit).build();
-			registry.addInterceptor(new RateLimitInterceptor(bucket, 1)).addPathPatterns(i.getValue());
-		});
-		
+		Bandwidth limit = Bandwidth.simple(NUMBER_OF_REQUESTS, Duration.ofMinutes(1));
+		Bucket bucket = Bucket4j.builder().addLimit(limit).build();
+		registry.addInterceptor(new RateLimitInterceptor(bucket, 1)).addPathPatterns("/employees/bucket4j");
+		registry.addInterceptor(new RateLimitInterceptor(bucket, 1)).addPathPatterns("/employees/bucket4j_v2");
 	}
 
 }

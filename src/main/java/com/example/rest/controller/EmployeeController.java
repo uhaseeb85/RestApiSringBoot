@@ -92,6 +92,17 @@ public class EmployeeController
     }
     
     /**
+     * Gets the employees bucket 4 j.
+     *
+     * @return the employees bucket 4 j
+     */
+    @GetMapping(path="/bucket4j_v2", produces = "application/json")
+    public Employees getEmployeesBucket4j_v2() 
+    {
+        return employeeDao.getAllEmployees();
+    }
+    
+    /**
      * Adds the employee.
      *
      * @param headerPersist the header persist
