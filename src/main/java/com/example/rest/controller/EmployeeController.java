@@ -25,23 +25,38 @@ import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.Bucket;
 import io.github.bucket4j.Bucket4j;
 
+/**
+ * The Class EmployeeController.
+ */
 @RestController
 @RequestMapping(path = "/employees")
 public class EmployeeController 
 {
+	
+	/** The bucket. */
 	private final Bucket bucket;
 	
+	/** The rate limiter. */
 	private final RateLimiter rateLimiter = RateLimiter.create(0.25);
 	
+	/**
+	 * Instantiates a new employee controller.
+	 */
 	public EmployeeController() {
 		long capacity = 10;
 		Bandwidth limit = Bandwidth.simple(capacity, Duration.ofMinutes(1));
 	    this.bucket = Bucket4j.builder().addLimit(limit).build();
 	}
 	
+    /** The employee dao. */
     @Autowired
     private EmployeeDAO employeeDao;
     
+    /**
+     * Gets the employees rate limiter.
+     *
+     * @return the employees rate limiter
+     */
     @GetMapping(path="/ratelimiter", produces = "application/json")
     public Employees getEmployeesRateLimiter() 
     {
@@ -49,6 +64,12 @@ public class EmployeeController
         return employeeDao.getAllEmployees();
     }
     
+    /**
+     * Gets the employees weddini.
+     *
+     * @param response the response
+     * @return the employees weddini
+     */
     @GetMapping(path="/weddini", produces = "application/json")
     public ResponseEntity<Employees> getEmployeesWeddini(HttpServletResponse response) 
     {
@@ -59,12 +80,26 @@ public class EmployeeController
     	 return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).build();
     }
     
+    /**
+     * Gets the employees bucket 4 j.
+     *
+     * @return the employees bucket 4 j
+     */
     @GetMapping(path="/bucket4j", produces = "application/json")
     public Employees getEmployeesBucket4j() 
     {
         return employeeDao.getAllEmployees();
     }
     
+    /**
+     * Adds the employee.
+     *
+     * @param headerPersist the header persist
+     * @param headerLocation the header location
+     * @param employee the employee
+     * @return the response entity
+     * @throws Exception the exception
+     */
     @PostMapping(path= "/", consumes = "application/json", produces = "application/json")
     public ResponseEntity<Object> addEmployee(
                         @RequestHeader(name = "X-COM-PERSIST", required = true) String headerPersist,
