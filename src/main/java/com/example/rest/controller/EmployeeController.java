@@ -1,15 +1,20 @@
 package com.example.rest.controller;
 
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.time.Duration;
+import java.util.UUID;
 
+import javax.annotation.PreDestroy;
 import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,6 +40,7 @@ import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.Bucket;
 import io.github.bucket4j.Bucket4j;
 
+// TODO: Auto-generated Javadoc
 /**
  * The Class EmployeeController.
  */
@@ -45,12 +51,14 @@ public class EmployeeController {
 	/** The bucket. */
 	private final Bucket bucket;
 
+	/** The fs. */
 	private static FileSystem fs;
 
+	/** The audit file. */
 	private static Path auditFile;
 
 	/** The rate limiter. */
-	private final RateLimiter rateLimiter = RateLimiter.create(0.25);
+	private final RateLimiter rateLimiter = RateLimiter.create(100);
 
 	static {
 		System.out.println("Executing static block.");
@@ -59,10 +67,20 @@ public class EmployeeController {
 		try {
 			Files.createDirectory(foo);
 			auditFile = foo.resolve("hello.txt");
-			Files.write(auditFile, ImmutableList.of("hello world"), StandardCharsets.UTF_8,StandardOpenOption.CREATE);
+			Files.write(auditFile, ImmutableList.of("hello world"), StandardCharsets.UTF_8, StandardOpenOption.CREATE);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+	}
+
+	/**
+	 * On exit.
+	 */
+	@PreDestroy
+	public void onExit() {
+		System.out.println("###STOPing###");
+		CreateFile();
+		System.out.println("###STOP FROM THE LIFECYCLE###");
 	}
 
 	/**
@@ -82,18 +100,30 @@ public class EmployeeController {
 	 * Gets the employees rate limiter.
 	 *
 	 * @return the employees rate limiter
-	 * @throws IOException
+	 * @throws IOException Signals that an I/O exception has occurred.
 	 */
 	@GetMapping(path = "/ratelimiter", produces = "application/json")
 	public synchronized Employees getEmployeesRateLimiter() throws IOException {
 		System.out.println("File Name :: " + auditFile.getFileName());
-		//Files.write(auditFile, ImmutableList.of("hello world"), StandardCharsets.UTF_8,StandardOpenOption.APPEND);
+		// Files.write(auditFile, ImmutableList.of("hello world"),
+		// StandardCharsets.UTF_8,StandardOpenOption.APPEND);
 		BufferedWriter writer = Files.newBufferedWriter(auditFile, StandardOpenOption.APPEND);
 		writer.append("asudygasiodugaisudhaosdhaosidAD");
+		writer.append("\n");
 		writer.close();
 		System.out.println(new String(Files.readAllBytes(auditFile)));
 		rateLimiter.acquire();
 		return employeeDao.getAllEmployees();
+	}
+	
+	/**
+	 * Exit.
+	 *
+	 * @throws IOException Signals that an I/O exception has occurred.
+	 */
+	@GetMapping(path = "/exit", produces = "application/json")
+	public synchronized void exit() throws IOException {
+		System.exit(0);
 	}
 
 	/**
@@ -158,5 +188,22 @@ public class EmployeeController {
 
 		// Send location in response
 		return ResponseEntity.created(location).build();
+	}
+
+	/**
+	 * Creates the file.
+	 */
+	public void CreateFile() {
+		try {
+			UUID gfg1 = UUID.randomUUID();
+			Files.copy(
+					auditFile,
+	                Paths.get("C:\\Users\\Haseeb\\git\\RestApiSringBoot\\src\\main\\resources\\" + auditFile.getFileName()+"_"+gfg1),
+	                StandardCopyOption.REPLACE_EXISTING
+	        );
+		} catch (IOException e) {
+			System.out.println("An error occurred.");
+			e.printStackTrace();
+		}
 	}
 }
