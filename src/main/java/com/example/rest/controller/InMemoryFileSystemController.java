@@ -61,13 +61,13 @@ public class InMemoryFileSystemController {
 	}
 
 	/**
-	 * Gets the employees rate limiter.
+	 * Write.
 	 *
-	 * @return the employees rate limiter
+	 * @return Data
 	 * @throws IOException Signals that an I/O exception has occurred.
 	 */
 	@GetMapping(path = "/write", produces = "application/json")
-	public synchronized String getEmployeesRateLimiter() throws IOException {
+	public synchronized String write() throws IOException {
 		System.out.println("File Name :: " + auditFile.getFileName());
 		Files.write(auditFile, ImmutableList.of("hello world"), StandardCharsets.UTF_8, StandardOpenOption.APPEND);
 		return new String(Files.readAllBytes(auditFile));
