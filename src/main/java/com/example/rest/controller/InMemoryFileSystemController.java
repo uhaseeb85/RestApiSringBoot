@@ -55,9 +55,9 @@ public class InMemoryFileSystemController {
 	 */
 	@PreDestroy
 	public void onExit() {
-		System.out.println("###STOPing###");
-		sftpFile();
-		System.out.println("###STOP FROM THE LIFECYCLE###");
+		System.out.println("Dumping data from Memory to File on Exit.");
+		ftpFile();
+		System.out.println("Data dumped to File. Exiting.");
 	}
 
 	/**
@@ -73,7 +73,7 @@ public class InMemoryFileSystemController {
 		Files.write(auditFile, ImmutableList.of("hello world - qwjhasjasdhjasdljkasdljabsdjhasdasdjhasdlkjhasdjh"),
 				StandardCharsets.UTF_8, StandardOpenOption.APPEND);
 		if (filesizeInBytes > 500) {
-			sftpFile();
+			ftpFile();
 			Files.write(auditFile, ImmutableList.of("Audit START"), StandardCharsets.UTF_8);
 		}
 		return new String(Files.readAllBytes(auditFile));
@@ -92,7 +92,7 @@ public class InMemoryFileSystemController {
 	/**
 	 * Creates the file.
 	 */
-	public void sftpFile() {
+	public void ftpFile() {
 		try {
 			UUID gfg1 = UUID.randomUUID();
 			Files.copy(auditFile, Paths.get("C:\\Users\\Haseeb\\git\\RestApiSringBoot\\src\\main\\resources\\"
