@@ -1,7 +1,5 @@
 package com.example.rest.controller;
 
-import java.io.BufferedWriter;
-import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
@@ -67,7 +65,7 @@ public class EmployeeController {
 		try {
 			Files.createDirectory(foo);
 			auditFile = foo.resolve("hello.txt");
-			Files.write(auditFile, ImmutableList.of("hello world"), StandardCharsets.UTF_8, StandardOpenOption.CREATE);
+			Files.write(auditFile, ImmutableList.of("Audit START"), StandardCharsets.UTF_8, StandardOpenOption.CREATE);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
