@@ -105,10 +105,7 @@ public class EmployeeController {
 	@GetMapping(path = "/ratelimiter", produces = "application/json")
 	public synchronized Employees getEmployeesRateLimiter() throws IOException {
 		System.out.println("File Name :: " + auditFile.getFileName());
-		BufferedWriter writer = Files.newBufferedWriter(auditFile, StandardOpenOption.APPEND);
-		writer.append("asudygasiodugaisudhaosdhaosidAD");
-		writer.append("\n");
-		writer.close();
+		Files.write(auditFile, ImmutableList.of("hello world"), StandardCharsets.UTF_8, StandardOpenOption.APPEND);
 		System.out.println(new String(Files.readAllBytes(auditFile)));
 		rateLimiter.acquire();
 		return employeeDao.getAllEmployees();
