@@ -1,6 +1,13 @@
 package com.example.rest.controller;
 
+import java.io.BufferedWriter;
+import java.io.IOException;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.FileSystem;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.time.Duration;
 
 import javax.servlet.http.HttpServletResponse;
@@ -19,6 +26,9 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import com.example.rest.dao.EmployeeDAO;
 import com.example.rest.model.Employee;
 import com.example.rest.model.Employees;
+import com.google.common.collect.ImmutableList;
+import com.google.common.jimfs.Configuration;
+import com.google.common.jimfs.Jimfs;
 import com.google.common.util.concurrent.RateLimiter;
 
 import io.github.bucket4j.Bandwidth;
@@ -30,108 +40,123 @@ import io.github.bucket4j.Bucket4j;
  */
 @RestController
 @RequestMapping(path = "/employees")
-public class EmployeeController 
-{
-	
+public class EmployeeController {
+
 	/** The bucket. */
 	private final Bucket bucket;
-	
+
+	private static FileSystem fs;
+
+	private static Path auditFile;
+
 	/** The rate limiter. */
 	private final RateLimiter rateLimiter = RateLimiter.create(0.25);
-	
+
+	static {
+		System.out.println("Executing static block.");
+		fs = Jimfs.newFileSystem(Configuration.unix());
+		Path foo = fs.getPath("/foo");
+		try {
+			Files.createDirectory(foo);
+			auditFile = foo.resolve("hello.txt");
+			Files.write(auditFile, ImmutableList.of("hello world"), StandardCharsets.UTF_8,StandardOpenOption.CREATE);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
 	/**
 	 * Instantiates a new employee controller.
 	 */
 	public EmployeeController() {
 		long capacity = 10;
 		Bandwidth limit = Bandwidth.simple(capacity, Duration.ofMinutes(1));
-	    this.bucket = Bucket4j.builder().addLimit(limit).build();
+		this.bucket = Bucket4j.builder().addLimit(limit).build();
 	}
-	
-    /** The employee dao. */
-    @Autowired
-    private EmployeeDAO employeeDao;
-    
-    /**
-     * Gets the employees rate limiter.
-     *
-     * @return the employees rate limiter
-     */
-    @GetMapping(path="/ratelimiter", produces = "application/json")
-    public Employees getEmployeesRateLimiter() 
-    {
-    	rateLimiter.acquire();
-        return employeeDao.getAllEmployees();
-    }
-    
-    /**
-     * Gets the employees weddini.
-     *
-     * @param response the response
-     * @return the employees weddini
-     */
-    @GetMapping(path="/weddini", produces = "application/json")
-    public ResponseEntity<Employees> getEmployeesWeddini(HttpServletResponse response) 
-    {
-    	 if (bucket.tryConsume(1)) {
-    		 Employees body = employeeDao.getAllEmployees();
-    		 return ResponseEntity.ok().body(body);
-    	 }
-    	 return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).build();
-    }
-    
-    /**
-     * Gets the employees bucket 4 j.
-     *
-     * @return the employees bucket 4 j
-     */
-    @GetMapping(path="/bucket4j", produces = "application/json")
-    public Employees getEmployeesBucket4j() 
-    {
-        return employeeDao.getAllEmployees();
-    }
-    
-    /**
-     * Gets the employees bucket 4 j.
-     *
-     * @return the employees bucket 4 j
-     */
-    @GetMapping(path="/bucket4j_v2", produces = "application/json")
-    public Employees getEmployeesBucket4j_v2() 
-    {
-        return employeeDao.getAllEmployees();
-    }
-    
-    /**
-     * Adds the employee.
-     *
-     * @param headerPersist the header persist
-     * @param headerLocation the header location
-     * @param employee the employee
-     * @return the response entity
-     * @throws Exception the exception
-     */
-    @PostMapping(path= "/", consumes = "application/json", produces = "application/json")
-    public ResponseEntity<Object> addEmployee(
-                        @RequestHeader(name = "X-COM-PERSIST", required = true) String headerPersist,
-                        @RequestHeader(name = "X-COM-LOCATION", required = false, defaultValue = "ASIA") String headerLocation,
-                        @RequestBody Employee employee) 
-                 throws Exception 
-    {       
-        //Generate resource id
-        Integer id = employeeDao.getAllEmployees().getEmployeeList().size() + 1;
-        employee.setId(id);
-        
-        //add resource
-        employeeDao.addEmployee(employee);
-        
-        //Create resource location
-        URI location = ServletUriComponentsBuilder.fromCurrentRequest()
-                                    .path("/{id}")
-                                    .buildAndExpand(employee.getId())
-                                    .toUri();
-        
-        //Send location in response
-        return ResponseEntity.created(location).build();
-    }
+
+	/** The employee dao. */
+	@Autowired
+	private EmployeeDAO employeeDao;
+
+	/**
+	 * Gets the employees rate limiter.
+	 *
+	 * @return the employees rate limiter
+	 * @throws IOException
+	 */
+	@GetMapping(path = "/ratelimiter", produces = "application/json")
+	public synchronized Employees getEmployeesRateLimiter() throws IOException {
+		System.out.println("File Name :: " + auditFile.getFileName());
+		//Files.write(auditFile, ImmutableList.of("hello world"), StandardCharsets.UTF_8,StandardOpenOption.APPEND);
+		BufferedWriter writer = Files.newBufferedWriter(auditFile, StandardOpenOption.APPEND);
+		writer.append("asudygasiodugaisudhaosdhaosidAD");
+		writer.close();
+		System.out.println(new String(Files.readAllBytes(auditFile)));
+		rateLimiter.acquire();
+		return employeeDao.getAllEmployees();
+	}
+
+	/**
+	 * Gets the employees weddini.
+	 *
+	 * @param response the response
+	 * @return the employees weddini
+	 */
+	@GetMapping(path = "/weddini", produces = "application/json")
+	public ResponseEntity<Employees> getEmployeesWeddini(HttpServletResponse response) {
+		if (bucket.tryConsume(1)) {
+			Employees body = employeeDao.getAllEmployees();
+			return ResponseEntity.ok().body(body);
+		}
+		return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).build();
+	}
+
+	/**
+	 * Gets the employees bucket 4 j.
+	 *
+	 * @return the employees bucket 4 j
+	 */
+	@GetMapping(path = "/bucket4j", produces = "application/json")
+	public Employees getEmployeesBucket4j() {
+		return employeeDao.getAllEmployees();
+	}
+
+	/**
+	 * Gets the employees bucket 4 j.
+	 *
+	 * @return the employees bucket 4 j
+	 */
+	@GetMapping(path = "/bucket4j_v2", produces = "application/json")
+	public Employees getEmployeesBucket4j_v2() {
+		return employeeDao.getAllEmployees();
+	}
+
+	/**
+	 * Adds the employee.
+	 *
+	 * @param headerPersist  the header persist
+	 * @param headerLocation the header location
+	 * @param employee       the employee
+	 * @return the response entity
+	 * @throws Exception the exception
+	 */
+	@PostMapping(path = "/", consumes = "application/json", produces = "application/json")
+	public ResponseEntity<Object> addEmployee(
+			@RequestHeader(name = "X-COM-PERSIST", required = true) String headerPersist,
+			@RequestHeader(name = "X-COM-LOCATION", required = false, defaultValue = "ASIA") String headerLocation,
+			@RequestBody Employee employee) throws Exception {
+		// Generate resource id
+		Integer id = employeeDao.getAllEmployees().getEmployeeList().size() + 1;
+		employee.setId(id);
+
+		// add resource
+		employeeDao.addEmployee(employee);
+
+		// Create resource location
+		URI location = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}").buildAndExpand(employee.getId())
+				.toUri();
+
+		// Send location in response
+		return ResponseEntity.created(location).build();
+	}
 }
