@@ -56,7 +56,7 @@ public class InMemoryFileSystemController {
 	@PreDestroy
 	public void onExit() {
 		System.out.println("###STOPing###");
-		CreateFile();
+		sftpFile();
 		System.out.println("###STOP FROM THE LIFECYCLE###");
 	}
 
@@ -68,8 +68,14 @@ public class InMemoryFileSystemController {
 	 */
 	@GetMapping(path = "/write", produces = "application/json")
 	public synchronized String write() throws IOException {
-		System.out.println("File Name :: " + auditFile.getFileName());
-		Files.write(auditFile, ImmutableList.of("hello world"), StandardCharsets.UTF_8, StandardOpenOption.APPEND);
+		long filesizeInBytes = Files.size(auditFile);
+		System.out.println("File Size :: " + filesizeInBytes);
+		Files.write(auditFile, ImmutableList.of("hello world - qwjhasjasdhjasdljkasdljabsdjhasdasdjhasdlkjhasdjh"),
+				StandardCharsets.UTF_8, StandardOpenOption.APPEND);
+		if (filesizeInBytes > 500) {
+			sftpFile();
+			Files.write(auditFile, ImmutableList.of("Audit START"), StandardCharsets.UTF_8);
+		}
 		return new String(Files.readAllBytes(auditFile));
 	}
 
@@ -86,7 +92,7 @@ public class InMemoryFileSystemController {
 	/**
 	 * Creates the file.
 	 */
-	public void CreateFile() {
+	public void sftpFile() {
 		try {
 			UUID gfg1 = UUID.randomUUID();
 			Files.copy(auditFile, Paths.get("C:\\Users\\Haseeb\\git\\RestApiSringBoot\\src\\main\\resources\\"
